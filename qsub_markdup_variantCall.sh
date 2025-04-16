@@ -8,7 +8,7 @@ mkdir -p $WORKDIR/log/jobs
 cat <<EOF > $WORKDIR/log/jobs/${SAMPLE}.mkdp.vc.job
 #!/bin/bash
 
-#SBATCH -A r00346
+#SBATCH -A r00302
 #SBATCH --mail-user=jiaji@iu.edu
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1

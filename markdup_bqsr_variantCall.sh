@@ -11,8 +11,8 @@ SAMPLE=$2
 # --------------------------
 module load gatk
 module load java/17.0.7
-module load conda
-conda activate r_env
+#module load conda
+#conda activate r_env
 
 # --------------------------
 # Path Configuration
@@ -54,18 +54,14 @@ set -eo pipefail
 # Step 1: Mark Duplicates 3hrs
 if [[ ! -s $WORKDIR/table/${SAMPLE}.marked_dup_metrics.txt ]]; then
     echo_step "Mark Duplicates..."
-	gatk --java-options "-Xmx32g -XX:+UseParallelGC -XX:ParallelGCThreads=8" MarkDuplicatesSpark \
+	gatk --java-options "-Xmx16g" \
+		MarkDuplicatesSpark \
 		-I $WORKDIR/mergedBAMs/${SAMPLE}.sorted.bam \
 		-O $WORKDIR/output/${SAMPLE}.sort.dup.bam \
 		-M $WORKDIR/table/${SAMPLE}.marked_dup_metrics.txt  \
 		--ASSUME_SORT_ORDER coordinate \
 		--create-output-bam-index true || die "MarkDuplicates failed"
 fi
-
-# SetNmMdAndUqTags to fix the tags in bam files
-#java -Xmx32g -jar $picard SetNmMdAndUqTags -R $REF \
-#	-I $WORKDIR/output/${SAMPLE}.sort.dup.bam \
-#	-O $WORKDIR/output/${SAMPLE}_SetNmMdAndUqTags_WGS.bam
 
 # Step 2: Base Recalibration 3-5hrs
 if [[ ! -s -O $WORKDIR/table/${SAMPLE}.recalBefore.table]]; then
@@ -95,32 +91,13 @@ fi
 # 20hrs
 if [[ ! -s $WORKDIR/variant_calls/gvcf/${SAMPLE}.g.vcf.gz ]]; then
 	echo_step "Calling Variants..."
-	gatk --java-options "-Xmx32g -XX:ParallelGCThreads=8" \
+	gatk --java-options "-Xmx16g" \
 		HaplotypeCaller \
 		-I $WORKDIR/output/bqsr/${SAMPLE}.sort.dup.bqsr.bam \
 		-R $REF \
 		-ERC GVCF \
-		--native-pair-hmm-threads 8 \
 		-O $WORKDIR/variant_calls/gvcf/${SAMPLE}.g.vcf.gz  || die "HaplotypeCaller failed"
 fi
 
-# Step 4.1 Post-Recalibration Analysis (Optional) 4-5hrs
-#if [[ ! -s $WORKDIR/table/${SAMPLE}.recalAfter.table ]]; then
-#	echo_step "Analyzing Covariates..."
-#	gatk --java-options "-Xmx16g" \
-#		BaseRecalibrator \
-#		-I $WORKDIR/output/bqsr/${SAMPLE}.sort.dup.bqsr.bam \
-#		-R $REF --known-sites $DBSNP --known-sites $KNOWNINDEL --known-sites $MILLS \
-#		-O $WORKDIR/table/${SAMPLE}.recalAfter.table
-#fi
-# 1mins
-#if [[ ! -s $WORKDIR/table/${SAMPLE}.analyzeCovariates.pdf ]]; then
-#	echo_step "Analyzing Covariates..."
-#	gatk AnalyzeCovariates \
-#		-before $WORKDIR/table/${SAMPLE}.recalBefore.table \
-#		-after $WORKDIR/table/${SAMPLE}.recalAfter.table \
-#		-plots $WORKDIR/table/${SAMPLE}.analyzeCovariates.pdf \
-#		-csv $WORKDIR/table/${SAMPLE}.analyzeCovariates.csv || die "AnalyzeCovariates failed"
-#fi
 
 echo_step "Completed"

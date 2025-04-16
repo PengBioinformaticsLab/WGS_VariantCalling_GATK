@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# Define the directory containing BAM files and working directory
- # Update with the correct paths
 WORKDIR=$1
 sample_list=$2
 

@@ -11,7 +11,7 @@ mkdir -p $WORKDIR/log/jobs
 cat <<EOF > $WORKDIR/log/jobs/${SAMPLE}.preprocess_merge.job
 #!/bin/bash
 
-#SBATCH -A r00346
+#SBATCH -A r00302
 #SBATCH --mail-user=jiaji@iu.edu
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
